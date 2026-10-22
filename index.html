@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>lan-kit — the shared LAN core</title>
+<style>
+  :root{--bg:#0f1115;--card:#171a21;--ink:#e7e9ee;--mut:#9aa3b2;--line:#252a34;--acc:#22c55e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  header,main,footer{max-width:760px;margin:0 auto;padding:24px 20px}
+  h1{margin:0 0 6px;font-size:24px}
+  .mut{color:var(--mut)}
+  .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin:18px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .card h3{margin:0 0 4px;font-size:14px}
+  .card p{margin:0;color:var(--mut);font-size:13px}
+  .btn{display:inline-block;background:var(--acc);color:#06210f;text-decoration:none;font-weight:600;border-radius:10px;padding:10px 14px;margin:4px 4px 0 0}
+  code{background:#0d1014;padding:2px 6px;border-radius:6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>lan-kit</h1>
+  <p class="mut">The shared LAN core: a local room with a real-time channel over Server-Sent Events + POST. Zero dependencies. MIT.</p>
+  <p><a class="btn" href="./demo/">Open the client demo</a> <a class="btn" href="https://github.com/drsamonline/lan-kit">Source</a></p>
+</header>
+<main>
+  <div class="grid">
+    <div class="card"><h3>No WebSocket lib</h3><p>SSE for server → client, POST for client → server. Nothing to bundle.</p></div>
+    <div class="card"><h3>Host + client</h3><p><code>createHost()</code> in Node; <code>Lan.client()</code> in the browser.</p></div>
+    <div class="card"><h3>Room codes</h3><p>Short, unambiguous codes; a URL helper for the current LAN.</p></div>
+    <div class="card"><h3>Offline by design</h3><p>Runs on a Wi-Fi network with the internet unplugged.</p></div>
+  </div>
+  <p class="mut">Transport only — not a security boundary. Add your own room check and never send secrets.</p>
+</main>
+<footer class="mut">Built with lan-kit · © 2026 Dr Sohil Momin · Part of the Forge system</footer>
+</body>
+</html>

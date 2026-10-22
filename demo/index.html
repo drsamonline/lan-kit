@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>lan-kit — client demo</title>
+<style>
+  :root{--bg:#0f1115;--card:#171a21;--ink:#e7e9ee;--mut:#9aa3b2;--line:#252a34;--acc:#22c55e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  header,main,footer{max-width:720px;margin:0 auto;padding:20px}
+  input,button{font-size:15px}
+  input{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0d1014;color:var(--ink);margin:4px 0}
+  button{background:var(--acc);color:#06210f;border:0;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer;margin:4px 4px 0 0}
+  .ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;white-space:pre-wrap;max-height:280px;overflow:auto}
+  .mut{color:var(--mut)}
+</style>
+</head>
+<body>
+<header>
+  <h1>lan-kit — client demo</h1>
+  <p class="mut">Point this at a running <code>lan-host.js</code> on your network and talk to the room.</p>
+</header>
+<main>
+  <div class="card">
+    <label class="mut">Host URL</label>
+    <input id="url" value="http://localhost:8080" />
+    <button id="join">Join room</button>
+    <button id="leave" class="ghost" type="button">Leave</button>
+    <span class="mut" id="status"></span>
+  </div>
+  <div class="card">
+    <input id="msg" placeholder="Message…" />
+    <button id="send">Send</button>
+    <span class="mut">room code: <b id="code"></b></span>
+  </div>
+  <pre id="log"></pre>
+</main>
+<footer class="mut">© 2026 Dr Sohil Momin · lan-kit</footer>
+<script src="../lan-kit.js"></script>
+<script>
+  document.getElementById("code").textContent = Lan.roomCode(4);
+  var client = null;
+  function log(s){ var l=document.getElementById("log"); l.textContent += s + "\n"; l.scrollTop = l.scrollHeight; }
+  document.getElementById("join").onclick = function(){
+    if (client) return;
+    var url = document.getElementById("url").value.trim();
+    log("joining " + url + " …");
+    client = Lan.client({
+      url: url,
+      onOpen: function(h){ document.getElementById("status").textContent = "connected · room " + (h && h.room); log("joined room " + (h && h.room)); },
+      onMessage: function(m){ log("<- " + JSON.stringify(m)); },
+      onError: function(){ document.getElementById("status").textContent = "disconnected"; }
+    });
+  };
+  document.getElementById("leave").onclick = function(){ if (client){ client.close(); client=null; document.getElementById("status").textContent="left"; log("left"); } };
+  document.getElementById("send").onclick = function(){
+    if (!client) { log("join a room first"); return; }
+    var text = document.getElementById("msg").value;
+    client.send({ from: "demo", text: text }).then(function(r){ log("-> " + text + "  (" + JSON.stringify(r) + ")"); });
+    document.getElementById("msg").value = "";
+  };
+</script>
+</body>
+</html>
