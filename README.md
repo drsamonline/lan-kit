@@ -2,7 +2,7 @@
 
 [![live](https://img.shields.io/badge/live-online-22c55e)](https://drsamonline.github.io/lan-kit/)
 [![test](https://github.com/drsamonline/lan-kit/actions/workflows/test.yml/badge.svg)](https://github.com/drsamonline/lan-kit/actions/workflows/test.yml)
-[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![license](https://img.shields.io/badge/license-PolyForm Noncommercial-blue)](LICENSE)
 
 **The shared LAN core for drsamonline apps.** Zero dependencies. A local room with
 a real-time channel, for apps that run on a Wi-Fi network with **no internet**.
