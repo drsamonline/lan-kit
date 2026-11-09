@@ -27,3 +27,6 @@ jobs:
           node-version: "20"
       - name: Run tests
         run: node test-node.js
+
+      - name: Reconnect resumes, it does not replay
+        run: node test-resume.js

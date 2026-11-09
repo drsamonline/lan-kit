@@ -21,10 +21,12 @@ function createHost(opts) {
   const handlers = [];
   const history = [];                 // last N messages, for late joiners
   const HISTORY_MAX = opts.history === undefined ? 50 : opts.history;
+  let seq = 0;                        // every message gets an id, so a reconnect can resume
 
   function broadcast(msg) {
-    if (HISTORY_MAX) { history.push(msg); if (history.length > HISTORY_MAX) history.shift(); }
-    const payload = "event: message\ndata: " + JSON.stringify(msg) + "\n\n";
+    const id = ++seq;
+    if (HISTORY_MAX) { history.push({ id: id, msg: msg }); if (history.length > HISTORY_MAX) history.shift(); }
+    const payload = "id: " + id + "\nevent: message\ndata: " + JSON.stringify(msg) + "\n\n";
     for (const c of Array.from(clients)) {
       try { c.write(payload); } catch (e) { clients.delete(c); }
     }
@@ -48,7 +50,15 @@ function createHost(opts) {
       });
       res.write("retry: 2000\n\n");
       res.write("event: hello\ndata: " + JSON.stringify({ room: room, clients: clients.size + 1 }) + "\n\n");
-      if (opts.replay) history.forEach(function (m) { res.write("event: message\ndata: " + JSON.stringify(m) + "\n\n"); });
+      // Resume from where the client left off. EventSource reconnects on its own
+      // (retry: 2000 below) and sends Last-Event-ID; without this, every blip
+      // replayed the whole history and the app showed the last 50 messages twice.
+      if (opts.replay) {
+        const since = Number(req.headers["last-event-id"] || 0) || 0;
+        history.forEach(function (h) {
+          if (h.id > since) res.write("id: " + h.id + "\nevent: message\ndata: " + JSON.stringify(h.msg) + "\n\n");
+        });
+      }
       clients.add(res);
       const ping = setInterval(function () { try { res.write(": ping\n\n"); } catch (e) {} }, 15000);
       req.on("close", function () { clearInterval(ping); clients.delete(res); });
