@@ -50,7 +50,7 @@
       url: url,
       board: board,
       send: function (msg) {
-        /* A bare string is a message, not a mistake: wrapping it here means the
+        /* A bare string is a message rather than an error. Wrapping it here means the
            caller does not have to know the envelope. */
         var body = msg && typeof msg === "object" ? Object.assign({}, msg) : { t: "text", text: msg == null ? "" : String(msg) };
         if (pin) body.pin = pin;
