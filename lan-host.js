@@ -37,9 +37,11 @@ function createHost(opts) {
   const handlers = [];
   const history = [];                 // last N messages, for late joiners
   const HISTORY_MAX = opts.history === undefined ? 50 : opts.history;
+  let seq = 0;                        // every message gets an id, so a reconnect can resume
 
-  function write(res, event, data) {
-    return "event: " + event + "\ndata: " + JSON.stringify(data) + "\n\n";
+  function write(res, event, data, id) {
+    const head = id == null ? "" : "id: " + id + "\n";
+    return head + "event: " + event + "\ndata: " + JSON.stringify(data) + "\n\n";
   }
 
   /* A client on board "x" hears board "x" and the room-wide messages; a client
@@ -53,16 +55,17 @@ function createHost(opts) {
     return out;
   }
 
-  function remember(msg, board) {
+  function remember(msg, board, id) {
     if (!HISTORY_MAX) return;
-    history.push(board ? { board: board, msg: msg } : { msg: msg });
+    history.push({ id: id, board: board, msg: msg });
     if (history.length > HISTORY_MAX) history.shift();
   }
 
   function broadcast(msg, board) {
     const b = board == null ? "" : String(board);
-    remember(msg, b);
-    const payload = write(null, "message", msg);
+    const id = ++seq;                 // so a reconnect can ask for what it missed
+    remember(msg, b, id);
+    const payload = write(null, "message", msg, id);
     for (const res of forBoard(b)) {
       try { res.write(payload); } catch (e) { clients.delete(res); }
     }
@@ -98,9 +101,15 @@ function createHost(opts) {
       });
       res.write("retry: 2000\n\n");
       res.write(write(null, "hello", { room: room, app: app, board: board, pin: !!pin, clients: clients.size + 1 }));
+      // Resume from where the client left off. EventSource reconnects on its own
+      // (retry: 2000 above) and sends Last-Event-ID; without this, every blip
+      // replayed the whole history and the app showed the last 50 messages twice.
       if (opts.replay) {
+        const since = Number(req.headers["last-event-id"] || 0) || 0;
         history.forEach(function (h) {
-          if (!h.board || !board || h.board === board) res.write(write(null, "message", h.msg));
+          if (!h.board || !board || h.board === board) {
+            if (h.id > since) res.write(write(null, "message", h.msg, h.id));
+          }
         });
       }
       clients.set(res, board);
