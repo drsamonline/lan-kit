@@ -81,6 +81,9 @@
   <div class="grid">
     <div class="card"><h3>No WebSocket lib</h3><p>SSE for server → client, POST for client → server. Nothing to bundle.</p></div>
     <div class="card"><h3>Host + client</h3><p><code>createHost()</code> in Node; <code>Lan.client()</code> in the browser.</p></div>
+    <div class="card"><h3>Boards</h3><p><code>Lan.client({ board: "main" })</code> joins one board; a client that names none hears the whole room. <code>host.broadcast(msg, board)</code> and <code>host.snapshot(board, doc)</code>.</p></div>
+    <div class="card"><h3>A room PIN</h3><p><code>createHost({ pin: "4821" })</code> refuses a POST that does not carry it. The PIN is <strong>stripped before the broadcast</strong> — the room it protects never sees it.</p></div>
+    <div class="card"><h3>Finding a room</h3><p><code>Lan.health(url)</code> asks a host who it is; <code>Lan.scan()</code> looks for rooms on this Wi-Fi, with no internet and no DNS.</p></div>
     <div class="card"><h3>Room codes</h3><p>Short, unambiguous codes; a URL helper for the current LAN.</p></div>
     <div class="card"><h3>Offline by design</h3><p>Runs on a Wi-Fi network with the internet unplugged.</p></div>
   </div>

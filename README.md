@@ -25,38 +25,74 @@ into every browser and Node, so a room needs **no dependencies at all**:
 
 ```js
 const { createHost } = require("./lan-host.js");
-const host = createHost({ room: "canteen", history: 50 });
+const host = createHost({ room: "canteen", app: "canteen", pin: "4821", history: 50 });
 const port = await host.listen(0);          // 0 = any free port
-host.onMessage(m => console.log("got", m));
-host.broadcast({ hello: "room" });
+host.onMessage((m, board) => console.log("got", m, "on", board));
+host.broadcast({ hello: "room" });          // everyone
+host.broadcast({ line: "x" }, "board-2");   // one board
+host.snapshot("board-2", { doc: [] });      // catch a joiner up
 ```
 
 **Client (browser):**
 
 ```js
 const c = Lan.client({ url: Lan.hostUrl(8080),
-                       onOpen:    h => console.log("joined", h.room),
-                       onMessage: m => console.log("got", m) });
+                       board: "main",            // optional: which board to join
+                       pin: "4821",              // optional: the room's PIN
+                       onOpen:     h => console.log("joined", h.room),
+                       onSnapshot: s => console.log("caught up", s.doc),
+                       onMessage:  m => console.log("got", m) });
 c.send({ from: "me", text: "hello room" });
+c.send("a bare string is a message too");
 ```
 
 `Lan.roomCode()` makes a short code (no 0/O/1/I/L); `Lan.hostUrl(port)` builds the
-URL for the current LAN.
+URL for the current LAN (and still works from `file://`, where there is no hostname);
+`Lan.health(url)` asks a host who it is; `Lan.scan()` looks for rooms on the subnet.
+
+### Boards
+
+A client that names a board hears **that board plus the room-wide messages**. A
+client that names none hears everything — which is what every app already got, so
+nothing that worked before changes behaviour. `board` is routing, not content: it
+is stripped from the message before broadcast.
+
+### The PIN
+
+Set `pin` on the host and every `POST /send` must carry it or it is refused with
+`403 {"ok":false,"error":"pin"}`. The client sends it automatically when given one.
+
+**The PIN never reaches the room.** It rides on every POST, so the host deletes it
+from the message before broadcasting — otherwise the secret is published to exactly
+the people it was meant to keep out. `/health` reports `pin: true` or `false`, never
+the value.
 
 ## Verified
 
 ```
 node test-node.js
-8 passed, 0 failed
+42 passed, 0 failed
 ```
 
-Covers: listen, SSE connect, client count, POST broadcast, the hello event, the
-observer callback, the health endpoint, and a clean close.
+Covers the transport (listen, SSE connect, client count, POST broadcast, the hello
+event, the observer callback, the health endpoint, a clean close), boards (a message
+reaches its own board, not another, and reaches a client that named none), snapshots,
+the PIN (refused without it, refused with the wrong one, accepted with the right one,
+**and never broadcast**), and the client against a stubbed browser (a bare string
+becomes a text message, an object is sent as it is, the pin rides on every POST,
+`hostUrl` survives `file://`). `Lan.health` and `Lan.scan` are tested against real
+sockets, including a dead host, which must resolve to `null` rather than throw.
+
+The suite is mutation-tested: removing `delete msg.pin` turns 1 red, ignoring the
+board filter turns 1 red, and removing the pin check turns 4 red.
 
 ## What it is not
 
-Not a security boundary. A LAN room is open to anyone on the network — add a room
-code check in your app if you need one, and never send secrets over it.
+Not a security boundary. The PIN keeps a stranger on the same Wi-Fi out of a room;
+it is not authentication, it is not encrypted, and it travels in clear text on the
+POST that carries it (which is why it is stripped before the broadcast, and why the
+host never echoes it). Anyone who can watch the network can read it. Do not send
+secrets over a LAN room.
 
 ## Support
 
