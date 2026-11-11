@@ -7,15 +7,20 @@ note below is read out of the kit file, so it cannot describe a function
 that is not there.
 
 ```js
-<script src="lan-host.js"></script>
-Kit.<name>(...)
-// or: const Kit = require('./lan-host.js')
+<script src="lan-kit.js"></script>
+Kit.client(...)
+// or: const Kit = require('./lan-kit.js')
 ```
 
-## The surface (0 entries)
+## The surface (5 entries)
 
 | Name | Arguments | What it does |
 |---|---|---|
+| `Kit.client` | `(opts)` | — |
+| `Kit.roomCode` | `(n)` | A short, unambiguous room code (no 0/O/1/I/L). |
+| `Kit.hostUrl` | `(port)` | The host URL for this device on the current LAN. |
+| `Kit.health` | `(url, timeoutMs)` | — |
+| `Kit.scan` | `(opts)` | — |
 
 ## Notes
 
